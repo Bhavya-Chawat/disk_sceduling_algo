@@ -1,265 +1,234 @@
-"use client";
+'use client';
 
-import React from "react";
-import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { ArrowRight, Zap, BarChart3, Eye, FileText } from "lucide-react";
-import Link from "next/link";
+import Link from 'next/link';
+import { motion } from 'framer-motion';
+import { HardDrive, Play, GitCompare, BookOpen, Zap, BarChart3 } from 'lucide-react';
+import { Button } from '../components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 
 export default function HomePage() {
-  const algorithms = [
-    {
-      name: "FCFS",
-      color: "algo-fcfs",
-      icon: "→",
-      desc: "First Come First Serve",
-      details: "Processes requests in order of arrival",
-    },
-    {
-      name: "SSTF",
-      color: "algo-sstf",
-      icon: "↗",
-      desc: "Shortest Seek Time First",
-      details: "Selects the closest request to current position",
-    },
-    {
-      name: "SCAN",
-      color: "algo-scan",
-      icon: "↔",
-      desc: "Elevator Algorithm",
-      details: "Moves in one direction servicing requests",
-    },
-    {
-      name: "C-SCAN",
-      color: "algo-cscan",
-      icon: "⟲",
-      desc: "Circular SCAN",
-      details: "SCAN with circular return to start",
-    },
-    {
-      name: "LOOK",
-      color: "algo-look",
-      icon: "⇄",
-      desc: "SCAN with Look",
-      details: "SCAN but reverses at last request",
-    },
-    {
-      name: "C-LOOK",
-      color: "algo-clook",
-      icon: "↻",
-      desc: "Circular LOOK",
-      details: "LOOK with circular return pattern",
-    },
-  ];
-
   const features = [
     {
-      icon: Eye,
-      title: "Real-time Visualization",
-      description:
-        "Watch disk head movements with smooth animations and track the entire process step by step",
+      icon: Play,
+      title: 'Interactive Simulation',
+      description: 'Run disk scheduling algorithms with custom parameters and see real-time visualization',
+      color: 'from-blue-400 to-blue-600',
+    },
+    {
+      icon: GitCompare,
+      title: 'Algorithm Comparison',
+      description: 'Compare all algorithms side-by-side to find the most efficient for your use case',
+      color: 'from-purple-400 to-purple-600',
+    },
+    {
+      icon: BookOpen,
+      title: 'Algorithm Explanations',
+      description: 'Learn how each algorithm works with detailed explanations and code examples',
+      color: 'from-pink-400 to-pink-600',
     },
     {
       icon: Zap,
-      title: "Step-by-step Animation",
-      description:
-        "Control the simulation speed and step through each request to understand the algorithm behavior",
+      title: 'Smooth Animations',
+      description: 'Watch the disk head move across tracks with beautiful, fluid animations',
+      color: 'from-orange-400 to-orange-600',
     },
     {
       icon: BarChart3,
-      title: "Performance Comparison",
-      description:
-        "Compare all algorithms side-by-side with detailed metrics and visual charts",
+      title: 'Performance Metrics',
+      description: 'Analyze total seek time, average seek time, and step-by-step breakdowns',
+      color: 'from-green-400 to-green-600',
     },
     {
-      icon: FileText,
-      title: "Detailed Metrics",
-      description:
-        "Analyze total seek distance, average seek time, variance, and more performance indicators",
+      icon: HardDrive,
+      title: '6 Algorithms',
+      description: 'FCFS, SSTF, SCAN, C-SCAN, LOOK, and C-LOOK implementations',
+      color: 'from-cyan-400 to-cyan-600',
+    },
+  ];
+
+  const algorithms = [
+    {
+      name: 'FCFS',
+      fullName: 'First Come First Serve',
+      description: 'Processes requests in arrival order',
+      color: 'from-blue-400 to-blue-600',
+    },
+    {
+      name: 'SSTF',
+      fullName: 'Shortest Seek Time First',
+      description: 'Selects closest request to current position',
+      color: 'from-purple-400 to-purple-600',
+    },
+    {
+      name: 'SCAN',
+      fullName: 'Elevator Algorithm',
+      description: 'Moves in one direction until the end',
+      color: 'from-pink-400 to-pink-600',
+    },
+    {
+      name: 'C-SCAN',
+      fullName: 'Circular SCAN',
+      description: 'Jumps back after reaching the end',
+      color: 'from-orange-400 to-orange-600',
+    },
+    {
+      name: 'LOOK',
+      fullName: 'LOOK Algorithm',
+      description: 'Like SCAN but only to last request',
+      color: 'from-green-400 to-green-600',
+    },
+    {
+      name: 'C-LOOK',
+      fullName: 'Circular LOOK',
+      description: 'Circular version of LOOK',
+      color: 'from-cyan-400 to-cyan-600',
     },
   ];
 
   return (
-    <div className="min-h-screen bg-disk-gradient">
+    <div className="container mx-auto max-w-7xl space-y-16">
       {/* Hero Section */}
-      <div className="container mx-auto px-4 py-20">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-center space-y-6 py-12"
+      >
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center space-y-8 mb-20"
+          animate={{ rotate: [0, 360] }}
+          transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+          className="inline-block"
         >
-          {/* Animated Disk Icon */}
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-            className="inline-block mb-8"
-          >
-            <div className="w-24 h-24 bg-gradient-to-br from-disk-primary-400 to-disk-purple-400 rounded-full flex items-center justify-center shadow-2xl shadow-disk-primary-400/50">
-              <motion.div
-                animate={{ scale: [1, 1.1, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
-                className="w-16 h-16 bg-disk-dark rounded-full flex items-center justify-center"
-              >
-                <div className="w-8 h-8 border-4 border-disk-primary-400 rounded-full" />
-              </motion.div>
-            </div>
-          </motion.div>
-
-          <h1 className="text-hero bg-gradient-to-r from-disk-primary-400 to-disk-purple-400 bg-clip-text text-transparent">
-            Disk Scheduling Simulator
-          </h1>
-
-          <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-            Visualize and compare disk scheduling algorithms with real-time
-            animations and performance metrics
-          </p>
-
-          {/* CTA Buttons */}
-          <div className="flex gap-4 justify-center">
-            <Link href="/simulator">
-              <Button className="bg-gradient-to-r from-disk-primary-500 to-disk-primary-600 hover:scale-105 transition-transform px-8 py-6 text-lg">
-                Start Simulation
-              </Button>
-            </Link>
-            <Link href="/compare">
-              <Button
-                variant="outline"
-                className="glass-panel border-disk-primary-400/50"
-              >
-                View Comparison
-              </Button>
-            </Link>
-          </div>
+          <HardDrive className="w-24 h-24 text-blue-500" />
         </motion.div>
+        
+        <h1 className="text-6xl md:text-7xl font-bold bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
+          Disk Scheduling
+          <br />
+          Simulator
+        </h1>
+        
+        <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          Visualize, understand, and compare disk scheduling algorithms with interactive animations and detailed performance metrics
+        </p>
 
-        {/* Algorithm Cards */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-        >
-          <h2 className="text-page-title text-white text-center mb-12">
-            Algorithm Showcase
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-16">
-            {algorithms.map((algo, index) => (
-              <motion.div
-                key={algo.name}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 * index }}
-                whileHover={{ y: -8 }}
-              >
-                <Link
-                  href={`/simulator?algorithm=${algo.name
-                    .toLowerCase()
-                    .replace("-", "")}`}
-                >
-                  <div className="glass-panel-strong glass-panel-hover p-6 cursor-pointer group">
-                    <div className={`text-4xl mb-4 text-${algo.color}`}>
-                      {algo.icon}
-                    </div>
-                    <h3 className="text-2xl font-bold text-white mb-2">
-                      {algo.name}
-                    </h3>
-                    <p className="text-gray-400">{algo.desc}</p>
-                    <div className="mt-4 flex items-center text-disk-primary-400 group-hover:translate-x-2 transition-transform">
-                      Learn More →
-                    </div>
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Features Section */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="mb-20"
-        >
-          <h2 className="text-page-title text-white text-center mb-12 mt-20">
-            Powerful Features
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {features.map((feature, index) => (
-              <motion.div
-                key={feature.title}
-                initial={{ opacity: 0, x: index % 2 === 0 ? -20 : 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2 * index }}
-                className="glass-panel p-6 rounded-2xl border border-white/5"
-              >
-                <div className="flex items-start gap-4">
-                  <div className="p-3 bg-gradient-to-br from-disk-primary-400/20 to-disk-purple-400/20 rounded-xl">
-                    <feature.icon className="w-6 h-6 text-disk-primary-400" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-semibold text-white mb-2">
-                      {feature.title}
-                    </h3>
-                    <p className="text-gray-400">{feature.description}</p>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Stats Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7 }}
-          className="glass-panel-strong p-8 rounded-2xl text-center"
-        >
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div>
-              <div className="text-4xl font-bold text-disk-primary-400 mb-2">
-                6
-              </div>
-              <div className="text-gray-400">Algorithms</div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold text-disk-purple-400 mb-2">
-                ∞
-              </div>
-              <div className="text-gray-400">Simulations</div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold text-status-active mb-2">
-                100%
-              </div>
-              <div className="text-gray-400">Interactive</div>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* CTA Section */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.9 }}
-          className="text-center mt-20"
-        >
-          <h2 className="text-3xl font-bold text-white mb-4">
-            Ready to Master Disk Scheduling?
-          </h2>
-          <p className="text-gray-400 mb-8">
-            Start simulating and comparing algorithms now
-          </p>
+        <div className="flex gap-4 justify-center flex-wrap">
           <Link href="/simulator">
-            <Button className="bg-gradient-to-r from-disk-primary-500 to-disk-purple-500 hover:scale-105 transition-transform px-10 py-6 text-lg shadow-2xl shadow-disk-primary-400/30">
-              Get Started
-              <ArrowRight className="w-5 h-5 ml-2" />
+            <Button
+              size="lg"
+              className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-lg px-8"
+            >
+              <Play className="w-5 h-5 mr-2" />
+              Start Simulation
             </Button>
           </Link>
-        </motion.div>
+          <Link href="/compare">
+            <Button
+              size="lg"
+              variant="outline"
+              className="glass text-lg px-8"
+            >
+              <GitCompare className="w-5 h-5 mr-2" />
+              Compare Algorithms
+            </Button>
+          </Link>
+        </div>
+      </motion.div>
+
+      {/* Features Grid */}
+      <div>
+        <motion.h2
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          className="text-4xl font-bold text-center mb-12 bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent"
+        >
+          Features
+        </motion.h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {features.map((feature, idx) => {
+            const Icon = feature.icon;
+            return (
+              <motion.div
+                key={feature.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: idx * 0.1 }}
+              >
+                <Card className="glass-card h-full hover:shadow-xl transition-shadow">
+                  <CardHeader>
+                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-4`}>
+                      <Icon className="w-6 h-6 text-white" />
+                    </div>
+                    <CardTitle>{feature.title}</CardTitle>
+                    <CardDescription>{feature.description}</CardDescription>
+                  </CardHeader>
+                </Card>
+              </motion.div>
+            );
+          })}
+        </div>
       </div>
+
+      {/* Algorithms Section */}
+      <div>
+        <motion.h2
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          className="text-4xl font-bold text-center mb-12 bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent"
+        >
+          Supported Algorithms
+        </motion.h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {algorithms.map((algo, idx) => (
+            <motion.div
+              key={algo.name}
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: idx * 0.1 }}
+              whileHover={{ scale: 1.05 }}
+            >
+              <Card className="glass-card h-full">
+                <CardContent className="pt-6">
+                  <div className={`text-3xl font-bold mb-2 bg-gradient-to-r ${algo.color} bg-clip-text text-transparent`}>
+                    {algo.name}
+                  </div>
+                  <div className="text-sm font-semibold text-gray-700 mb-2">
+                    {algo.fullName}
+                  </div>
+                  <p className="text-gray-600 text-sm">
+                    {algo.description}
+                  </p>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+      {/* CTA Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        className="glass-card rounded-2xl p-12 text-center"
+      >
+        <h2 className="text-3xl font-bold mb-4">Ready to Get Started?</h2>
+        <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
+          Explore how different disk scheduling algorithms optimize head movement and reduce seek time. Perfect for students and professionals learning operating systems.
+        </p>
+        <Link href="/simulator">
+          <Button
+            size="lg"
+            className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
+          >
+            <Play className="w-5 h-5 mr-2" />
+            Launch Simulator
+          </Button>
+        </Link>
+      </motion.div>
     </div>
   );
 }

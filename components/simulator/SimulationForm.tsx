@@ -1,249 +1,178 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Play, Shuffle } from 'lucide-react';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
+import { Select } from '../ui/select';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card';
+import { Algorithm, Direction } from '../../lib/algorithms/types';
+import { parseRequestString, validateRequests, generateRandomRequests } from '../../lib/utils';
 
 interface SimulationFormProps {
-  initialHead?: number;
-  trackSize?: number;
-  requests?: string;
-  direction?: "left" | "right";
-  algorithm?: string;
-  onSimulate: (params: {
-    initialHead: number;
-    trackSize: number;
+  onSubmit: (data: {
+    algorithm: Algorithm;
     requests: number[];
-    direction: "left" | "right";
-    algorithm: string;
+    initialHead: number;
+    totalTracks: number;
+    direction: Direction;
   }) => void;
-  algorithms: { name: string; description: string }[];
 }
 
-export function SimulationForm({
-  initialHead = 50,
-  trackSize = 200,
-  requests = "82, 170, 43, 140, 24, 16, 190",
-  direction = "right",
-  algorithm = "fcfs",
-  onSimulate,
-  algorithms,
-}: SimulationFormProps) {
-  const [formData, setFormData] = useState({
-    initialHead,
-    trackSize,
-    requests,
-    direction,
-    algorithm,
-  });
-
-  const generateRandomRequests = () => {
-    const count = 8;
-    const randomReqs = Array.from({ length: count }, () =>
-      Math.floor(Math.random() * formData.trackSize)
-    );
-    setFormData((prev) => ({
-      ...prev,
-      requests: randomReqs.join(", "),
-    }));
-  };
+export default function SimulationForm({ onSubmit }: SimulationFormProps) {
+  const [algorithm, setAlgorithm] = useState<Algorithm>('FCFS');
+  const [requestsInput, setRequestsInput] = useState('98, 183, 37, 122, 14, 124, 65, 67');
+  const [initialHead, setInitialHead] = useState('53');
+  const [totalTracks, setTotalTracks] = useState('200');
+  const [direction, setDirection] = useState<Direction>('right');
+  const [error, setError] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const requestArray = formData.requests
-      .split(",")
-      .map((r) => parseInt(r.trim()))
-      .filter((r) => !isNaN(r));
+    setError('');
 
-    onSimulate({
-      initialHead: formData.initialHead,
-      trackSize: formData.trackSize,
-      requests: requestArray,
-      direction: formData.direction as "left" | "right",
-      algorithm: formData.algorithm,
+    const requests = parseRequestString(requestsInput);
+    const head = parseInt(initialHead, 10);
+    const tracks = parseInt(totalTracks, 10);
+
+    if (isNaN(head) || head < 0 || head >= tracks) {
+      setError(`Initial head position must be between 0 and ${tracks - 1}`);
+      return;
+    }
+
+    const validation = validateRequests(requests, tracks);
+    if (!validation.valid) {
+      setError(validation.error || 'Invalid requests');
+      return;
+    }
+
+    onSubmit({
+      algorithm,
+      requests,
+      initialHead: head,
+      totalTracks: tracks,
+      direction,
     });
   };
 
+  const handleRandomize = () => {
+    const tracks = parseInt(totalTracks, 10) || 200;
+    const random = generateRandomRequests(8, tracks);
+    setRequestsInput(random.join(', '));
+    setInitialHead(Math.floor(Math.random() * tracks).toString());
+  };
+
   return (
-    <Card className="glass-panel-strong sticky top-20">
-      <CardHeader>
-        <CardTitle className="text-section">Simulation Parameters</CardTitle>
-        <CardDescription>
-          Configure the disk scheduling simulation
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Algorithm Selection */}
-          <div className="space-y-2">
-            <Label
-              htmlFor="algorithm"
-              className="text-sm font-medium text-gray-300 mb-2 block"
-            >
-              Algorithm
-            </Label>
-            <Select
-              value={formData.algorithm}
-              onValueChange={(value) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  algorithm: value,
-                }))
-              }
-            >
-              <SelectTrigger className="bg-white/5 border-disk-primary-400/30">
-                <SelectValue placeholder="Choose algorithm" />
-              </SelectTrigger>
-              <SelectContent>
-                {algorithms.map((algo) => (
-                  <SelectItem key={algo.name} value={algo.name.toLowerCase()}>
-                    {algo.name} - {algo.description}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.1 }}
+    >
+      <Card className="glass-card">
+        <CardHeader>
+          <CardTitle>Simulation Configuration</CardTitle>
+          <CardDescription>
+            Configure the parameters for disk scheduling simulation
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="algorithm">Algorithm</Label>
+                <Select
+                  id="algorithm"
+                  value={algorithm}
+                  onChange={(e) => setAlgorithm(e.target.value as Algorithm)}
+                >
+                  <option value="FCFS">FCFS</option>
+                  <option value="SSTF">SSTF</option>
+                  <option value="SCAN">SCAN</option>
+                  <option value="C-SCAN">C-SCAN</option>
+                  <option value="LOOK">LOOK</option>
+                  <option value="C-LOOK">C-LOOK</option>
+                </Select>
+              </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="initialHead">Initial Head Position</Label>
-              <Input
-                id="initialHead"
-                type="number"
-                min={0}
-                max={formData.trackSize - 1}
-                value={formData.initialHead}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    initialHead: parseInt(e.target.value) || 0,
-                  }))
-                }
-                className="bg-white/5 border-disk-primary-400/30 text-white"
-              />
+              <div className="space-y-2">
+                <Label htmlFor="direction">Direction</Label>
+                <Select
+                  id="direction"
+                  value={direction}
+                  onChange={(e) => setDirection(e.target.value as Direction)}
+                >
+                  <option value="left">Left</option>
+                  <option value="right">Right</option>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="initialHead">Initial Head Position</Label>
+                <Input
+                  id="initialHead"
+                  type="number"
+                  value={initialHead}
+                  onChange={(e) => setInitialHead(e.target.value)}
+                  placeholder="53"
+                  min="0"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="totalTracks">Total Tracks</Label>
+                <Input
+                  id="totalTracks"
+                  type="number"
+                  value={totalTracks}
+                  onChange={(e) => setTotalTracks(e.target.value)}
+                  placeholder="200"
+                  min="1"
+                />
+              </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="trackSize">Track Size</Label>
-              <Input
-                id="trackSize"
-                type="number"
-                min={100}
-                max={1000}
-                value={formData.trackSize}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    trackSize: parseInt(e.target.value) || 200,
-                  }))
-                }
-                className="bg-white/5 border-disk-primary-400/30 text-white"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="requests">Request Queue (comma-separated)</Label>
-            <div className="flex gap-2">
+              <Label htmlFor="requests">Request Queue</Label>
               <Input
                 id="requests"
-                value={formData.requests}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    requests: e.target.value,
-                  }))
-                }
-                placeholder="82, 170, 43, 140, 24, 16, 190"
-                className="bg-white/5 border-disk-primary-400/30 text-white flex-1"
+                value={requestsInput}
+                onChange={(e) => setRequestsInput(e.target.value)}
+                placeholder="98, 183, 37, 122, 14, 124, 65, 67"
               />
+            </div>
+
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm"
+              >
+                {error}
+              </motion.div>
+            )}
+
+            <div className="flex gap-3">
+              <Button
+                type="submit"
+                className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
+              >
+                <Play className="w-4 h-4 mr-2" />
+                Run Simulation
+              </Button>
               <Button
                 type="button"
-                onClick={generateRandomRequests}
-                variant="outline"
-                className="glass-panel border-disk-primary-400/50 whitespace-nowrap"
+                onClick={handleRandomize}
+                className="glass"
               >
-                Random
+                <Shuffle className="w-4 h-4 mr-2" />
+                Randomize
               </Button>
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Direction (for SCAN, C-SCAN, LOOK, C-LOOK)</Label>
-            <div className="flex gap-4">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="direction"
-                  checked={formData.direction === "left"}
-                  onChange={() =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      direction: "left",
-                    }))
-                  }
-                  className="accent-disk-primary-400"
-                />
-                <span className="text-sm text-gray-300">Left</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="direction"
-                  checked={formData.direction === "right"}
-                  onChange={() =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      direction: "right",
-                    }))
-                  }
-                  className="accent-disk-primary-400"
-                />
-                <span className="text-sm text-gray-300">Right</span>
-              </label>
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="space-y-3 pt-4">
-            <Button
-              type="submit"
-              className="w-full bg-gradient-to-r from-disk-primary-500 to-disk-primary-600 hover:scale-105 transition-transform"
-            >
-              Run Simulation
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full glass-panel border-disk-primary-400/50"
-            >
-              Step Through
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              className="w-full text-gray-400 hover:text-white"
-            >
-              Reset
-            </Button>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+          </form>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }

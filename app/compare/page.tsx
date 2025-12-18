@@ -1,295 +1,286 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
-import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ComparisonChart } from "@/components/simulator/ComparisonChart";
-import { SimulationSummary } from "@/components/simulator/SimulationSummary";
-import { fcfs } from "@/lib/algorithms/fcfs";
-import { sstf } from "@/lib/algorithms/sstf";
-import { scan } from "@/lib/algorithms/scan";
-import { cscan } from "@/lib/algorithms/cscan";
-import { look } from "@/lib/algorithms/look";
-import { clook } from "@/lib/algorithms/clook";
-import { SimulationResult } from "@/lib/algorithms/types";
-import { ArrowLeft, Play, RotateCcw, Sparkles } from "lucide-react";
-import Link from "next/link";
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { GitCompare, Play, Shuffle } from 'lucide-react';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
+import { Select } from '../../components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
+import ComparisonChart from '../../components/simulator/ComparisonChart';
+import { runAllAlgorithms } from '../../lib/simulationRunner';
+import { SimulationResult, Direction } from '../../lib/algorithms/types';
+import { parseRequestString, validateRequests, generateRandomRequests } from '../../lib/utils';
 
 export default function ComparePage() {
-  const [initialHead, setInitialHead] = useState<number>(50);
-  const [trackSize, setTrackSize] = useState<number>(200);
-  const [requests, setRequests] = useState<string>(
-    "82, 170, 43, 140, 24, 16, 190"
-  );
-  const [direction, setDirection] = useState<"left" | "right">("right");
+  const [requestsInput, setRequestsInput] = useState('98, 183, 37, 122, 14, 124, 65, 67');
+  const [initialHead, setInitialHead] = useState('53');
+  const [totalTracks, setTotalTracks] = useState('200');
+  const [direction, setDirection] = useState<Direction>('right');
   const [results, setResults] = useState<SimulationResult[]>([]);
-  const [isComparing, setIsComparing] = useState(false);
+  const [error, setError] = useState('');
 
-  const generateRandomRequests = () => {
-    const count = 8;
-    const randomReqs = Array.from({ length: count }, () =>
-      Math.floor(Math.random() * trackSize)
-    );
-    setRequests(randomReqs.join(", "));
-  };
+  const handleCompare = () => {
+    setError('');
+    const requests = parseRequestString(requestsInput);
+    const head = parseInt(initialHead, 10);
+    const tracks = parseInt(totalTracks, 10);
 
-  const runComparison = () => {
-    setIsComparing(true);
-    const requestArray = requests
-      .split(",")
-      .map((r) => parseInt(r.trim()))
-      .filter((r) => !isNaN(r));
-
-    if (requestArray.length === 0) {
-      alert("Please enter valid requests");
-      setIsComparing(false);
+    if (isNaN(head) || head < 0 || head >= tracks) {
+      setError(`Initial head position must be between 0 and ${tracks - 1}`);
       return;
     }
 
-    // Simulate a slight delay for animation effect
-    setTimeout(() => {
-      const comparisonResults: SimulationResult[] = [
-        fcfs(initialHead, requestArray, trackSize),
-        sstf(initialHead, requestArray, trackSize),
-        scan(initialHead, requestArray, trackSize, direction),
-        cscan(initialHead, requestArray, trackSize, direction),
-        look(initialHead, requestArray, trackSize, direction),
-        clook(initialHead, requestArray, trackSize, direction),
-      ];
+    const validation = validateRequests(requests, tracks);
+    if (!validation.valid) {
+      setError(validation.error || 'Invalid requests');
+      return;
+    }
 
-      setResults(comparisonResults);
-      setIsComparing(false);
-    }, 500);
+    const allResults = runAllAlgorithms({
+      requests,
+      initialHead: head,
+      totalTracks: tracks,
+      direction,
+    });
+
+    setResults(allResults);
   };
 
-  const resetComparison = () => {
-    setResults([]);
-    setInitialHead(50);
-    setTrackSize(200);
-    setRequests("82, 170, 43, 140, 24, 16, 190");
-    setDirection("right");
+  const handleRandomize = () => {
+    const tracks = parseInt(totalTracks, 10) || 200;
+    const random = generateRandomRequests(8, tracks);
+    setRequestsInput(random.join(', '));
+    setInitialHead(Math.floor(Math.random() * tracks).toString());
   };
+
+  const getBestAlgorithm = () => {
+    if (results.length === 0) return null;
+    return results.reduce((best, current) =>
+      current.totalSeekTime < best.totalSeekTime ? current : best
+    );
+  };
+
+  const bestAlgorithm = getBestAlgorithm();
 
   return (
-    <div className="min-h-screen bg-disk-gradient">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <Link href="/">
-            <Button
-              variant="ghost"
-              className="mb-4 text-gray-400 hover:text-white"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Home
-            </Button>
-          </Link>
+    <div className="container mx-auto max-w-7xl space-y-8">
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-center"
+      >
+        <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
+          Algorithm Comparison
+        </h1>
+        <p className="text-gray-600 text-lg">
+          Compare all disk scheduling algorithms side-by-side
+        </p>
+      </motion.div>
 
-          <div className="flex items-center gap-4 mb-2">
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-            >
-              <Sparkles className="w-8 h-8 text-disk-primary-400" />
-            </motion.div>
-            <h1 className="text-page-title bg-gradient-to-r from-disk-primary-400 to-disk-purple-400 bg-clip-text text-transparent">
-              Algorithm Performance Comparison
-            </h1>
-          </div>
-          <p className="text-gray-400 text-lg">
-            Compare all disk scheduling algorithms with the same input
-            parameters
-          </p>
-        </motion.div>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+      >
+        <Card className="glass-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <GitCompare className="w-5 h-5 text-blue-500" />
+              Comparison Configuration
+            </CardTitle>
+            <CardDescription>
+              Run all algorithms with the same parameters to compare performance
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="initialHead">Initial Head Position</Label>
+                  <Input
+                    id="initialHead"
+                    type="number"
+                    value={initialHead}
+                    onChange={(e) => setInitialHead(e.target.value)}
+                    placeholder="53"
+                    min="0"
+                  />
+                </div>
 
-        {/* Input Controls */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="glass-panel-strong p-6 rounded-2xl mb-8"
-        >
-          <h2 className="text-section text-white mb-4">
-            Simulation Parameters
-          </h2>
+                <div className="space-y-2">
+                  <Label htmlFor="totalTracks">Total Tracks</Label>
+                  <Input
+                    id="totalTracks"
+                    type="number"
+                    value={totalTracks}
+                    onChange={(e) => setTotalTracks(e.target.value)}
+                    placeholder="200"
+                    min="1"
+                  />
+                </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-            <div>
-              <label className="text-sm font-medium text-gray-300 mb-2 block">
-                Initial Head Position
-              </label>
-              <Input
-                type="number"
-                value={initialHead}
-                onChange={(e) => setInitialHead(parseInt(e.target.value) || 0)}
-                className="bg-white/5 border-disk-primary-400/30 text-white"
-                min={0}
-                max={trackSize - 1}
-              />
-            </div>
+                <div className="space-y-2">
+                  <Label htmlFor="direction">Direction</Label>
+                  <Select
+                    id="direction"
+                    value={direction}
+                    onChange={(e) => setDirection(e.target.value as Direction)}
+                    className="w-full"
+                  >
+                    <option value="left">Left</option>
+                    <option value="right">Right</option>
+                  </Select>
+                </div>
+              </div>
 
-            <div>
-              <label className="text-sm font-medium text-gray-300 mb-2 block">
-                Track Size
-              </label>
-              <Input
-                type="number"
-                value={trackSize}
-                onChange={(e) => setTrackSize(parseInt(e.target.value) || 200)}
-                className="bg-white/5 border-disk-primary-400/30 text-white"
-                min={100}
-                max={1000}
-              />
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="text-sm font-medium text-gray-300 mb-2 block">
-                Request Queue (comma-separated)
-              </label>
-              <div className="flex gap-2">
+              <div className="space-y-2">
+                <Label htmlFor="requests">Request Queue</Label>
                 <Input
-                  value={requests}
-                  onChange={(e) => setRequests(e.target.value)}
-                  placeholder="82, 170, 43, 140, 24, 16, 190"
-                  className="bg-white/5 border-disk-primary-400/30 text-white flex-1"
+                  id="requests"
+                  value={requestsInput}
+                  onChange={(e) => setRequestsInput(e.target.value)}
+                  placeholder="98, 183, 37, 122, 14, 124, 65, 67"
                 />
-                <Button
-                  onClick={generateRandomRequests}
-                  variant="outline"
-                  className="glass-panel border-disk-primary-400/50 whitespace-nowrap"
+              </div>
+
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm"
                 >
-                  Random
+                  {error}
+                </motion.div>
+              )}
+
+              <div className="flex gap-3">
+                <Button
+                  onClick={handleCompare}
+                  className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
+                >
+                  <Play className="w-4 h-4 mr-2" />
+                  Compare All Algorithms
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleRandomize}
+                  className="glass"
+                >
+                  <Shuffle className="w-4 h-4 mr-2" />
+                  Randomize
                 </Button>
               </div>
             </div>
-          </div>
+          </CardContent>
+        </Card>
+      </motion.div>
 
-          <div className="mb-6">
-            <label className="text-sm font-medium text-gray-300 mb-2 block">
-              Direction (for SCAN, C-SCAN, LOOK, C-LOOK)
-            </label>
-            <div className="flex gap-4">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="direction"
-                  checked={direction === "left"}
-                  onChange={() => setDirection("left")}
-                  className="accent-disk-primary-400"
-                />
-                <span className="text-sm text-gray-300">Left</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="direction"
-                  checked={direction === "right"}
-                  onChange={() => setDirection("right")}
-                  className="accent-disk-primary-400"
-                />
-                <span className="text-sm text-gray-300">Right</span>
-              </label>
-            </div>
-          </div>
-
-          <div className="flex gap-3">
-            <Button
-              onClick={runComparison}
-              disabled={isComparing}
-              className="bg-gradient-to-r from-disk-primary-500 to-disk-primary-600 hover:scale-105 transition-transform px-8"
-            >
-              <Play className="w-4 h-4 mr-2" />
-              {isComparing ? "Comparing..." : "Compare All Algorithms"}
-            </Button>
-
-            {results.length > 0 && (
-              <Button
-                onClick={resetComparison}
-                variant="outline"
-                className="glass-panel border-disk-primary-400/50"
-              >
-                <RotateCcw className="w-4 h-4 mr-2" />
-                Reset
-              </Button>
-            )}
-          </div>
-        </motion.div>
-
-        {/* Results */}
-        {results.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="space-y-8"
-          >
-            {/* Comparison Chart */}
-            <ComparisonChart results={results} />
-
-            {/* Summary Table and Stats */}
-            <SimulationSummary results={results} />
-
-            {/* Algorithm Details */}
+      {results.length > 0 && (
+        <>
+          {bestAlgorithm && (
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              className="glass-panel-strong p-6 rounded-2xl"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2 }}
+              className="glass-card p-6 rounded-2xl border-2 border-green-300"
             >
-              <h2 className="text-section text-white mb-6">Seek Sequences</h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {results.map((result) => (
-                  <div
-                    key={result.algorithm}
-                    className="glass-panel p-4 rounded-xl"
-                  >
-                    <h3 className="text-algo text-white mb-3">
-                      {result.algorithm}
-                    </h3>
-                    <div className="flex items-center gap-2 flex-wrap text-sm">
-                      {result.seekSequence.map((pos, idx) => (
-                        <React.Fragment key={idx}>
-                          <span className="text-disk-primary-400 font-mono font-bold">
-                            {pos}
-                          </span>
-                          {idx < result.seekSequence.length - 1 && (
-                            <span className="text-gray-600">→</span>
-                          )}
-                        </React.Fragment>
-                      ))}
-                    </div>
+              <div className="flex items-center justify-center gap-4">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white text-2xl">
+                  🏆
+                </div>
+                <div>
+                  <div className="text-sm text-gray-600">Best Performance</div>
+                  <div className="text-2xl font-bold bg-gradient-to-r from-green-500 to-cyan-500 bg-clip-text text-transparent">
+                    {bestAlgorithm.algorithm}
                   </div>
-                ))}
+                  <div className="text-sm text-gray-600">
+                    Total Seek Time: {bestAlgorithm.totalSeekTime} | Average: {bestAlgorithm.averageSeekTime.toFixed(2)}
+                  </div>
+                </div>
               </div>
             </motion.div>
-          </motion.div>
-        )}
+          )}
 
-        {/* Empty State */}
-        {results.length === 0 && !isComparing && (
+          <ComparisonChart results={results} />
+
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="glass-panel-strong p-12 rounded-2xl text-center"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
           >
-            <div className="text-6xl mb-4">📊</div>
-            <h3 className="text-2xl font-bold text-white mb-2">
-              Ready to Compare
-            </h3>
-            <p className="text-gray-400">
-              Configure your parameters above and click "Compare All Algorithms"
-              to see the results
-            </p>
+            <Card className="glass-card">
+              <CardHeader>
+                <CardTitle>Detailed Results</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {results.map((result, idx) => (
+                    <motion.div
+                      key={result.algorithm}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.1 * idx }}
+                      className="glass-card p-6 rounded-xl"
+                    >
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-xl font-bold bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
+                          {result.algorithm}
+                        </h3>
+                        <div className="flex gap-4">
+                          <div className="text-center">
+                            <div className="text-2xl font-bold text-orange-500">
+                              {result.totalSeekTime}
+                            </div>
+                            <div className="text-xs text-gray-600">Total Seek</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-2xl font-bold text-green-500">
+                              {result.averageSeekTime.toFixed(2)}
+                            </div>
+                            <div className="text-xs text-gray-600">Avg Seek</div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {result.sequence.map((track, trackIdx) => (
+                          <span
+                            key={`${result.algorithm}-${trackIdx}`}
+                            className="px-3 py-1 glass rounded-lg text-sm font-medium"
+                          >
+                            {track}
+                          </span>
+                        ))}
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </motion.div>
-        )}
-      </div>
+        </>
+      )}
+
+      {results.length === 0 && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-center py-20"
+        >
+          <div className="glass-card rounded-2xl p-12 inline-block">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+              className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-r from-blue-400 to-purple-400 opacity-20"
+            />
+            <p className="text-gray-500 text-lg">
+              Configure parameters and click Compare to see all algorithms
+            </p>
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 }

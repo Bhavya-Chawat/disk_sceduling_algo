@@ -1,43 +1,29 @@
-import { SimulationResult } from "./types";
+import { SimulationInput, SimulationResult, SimulationStep } from './types';
 
-export function fcfs(
-  initialHead: number,
-  requests: number[],
-  trackSize: number
-): SimulationResult {
-  const seekSequence = [initialHead, ...requests];
-  let totalSeekDistance = 0;
+export function fcfs(input: SimulationInput): SimulationResult {
+  const { requests, initialHead } = input;
+  const sequence: number[] = [initialHead];
+  const steps: SimulationStep[] = [];
+  let totalSeekTime = 0;
+  let currentHead = initialHead;
 
-  for (let i = 1; i < seekSequence.length; i++) {
-    totalSeekDistance += Math.abs(seekSequence[i] - seekSequence[i - 1]);
+  for (const request of requests) {
+    const seekTime = Math.abs(request - currentHead);
+    steps.push({
+      from: currentHead,
+      to: request,
+      seekTime,
+    });
+    totalSeekTime += seekTime;
+    currentHead = request;
+    sequence.push(request);
   }
-
-  const distances = [];
-  for (let i = 1; i < seekSequence.length; i++) {
-    distances.push(Math.abs(seekSequence[i] - seekSequence[i - 1]));
-  }
-
-  const maxSeekDistance = distances.length > 0 ? Math.max(...distances) : 0;
-  const averageSeekDistance =
-    distances.length > 0 ? totalSeekDistance / distances.length : 0;
-
-  // Calculate variance
-  const squaredDifferences = distances.map((dist) =>
-    Math.pow(dist - averageSeekDistance, 2)
-  );
-  const variance =
-    squaredDifferences.length > 0
-      ? squaredDifferences.reduce((sum, val) => sum + val, 0) /
-        squaredDifferences.length
-      : 0;
 
   return {
-    algorithm: "FCFS",
-    totalSeekDistance,
-    averageSeekDistance,
-    maxSeekDistance,
-    variance,
-    seekSequence,
-    requestsProcessed: requests.length,
+    algorithm: 'FCFS',
+    sequence,
+    steps,
+    totalSeekTime,
+    averageSeekTime: requests.length > 0 ? totalSeekTime / requests.length : 0,
   };
 }

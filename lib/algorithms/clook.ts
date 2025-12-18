@@ -1,110 +1,43 @@
-import { SimulationResult } from "./types";
+import { SimulationInput, SimulationResult, SimulationStep } from './types';
 
-export function clook(
-  initialHead: number,
-  requests: number[],
-  trackSize: number,
-  direction: "left" | "right" = "right"
-): SimulationResult {
-  const seekSequence = [initialHead];
+export function clook(input: SimulationInput): SimulationResult {
+  const { requests, initialHead, direction = 'right' } = input;
+  const sequence: number[] = [initialHead];
+  const steps: SimulationStep[] = [];
+  let totalSeekTime = 0;
   let currentHead = initialHead;
-  let totalSeekDistance = 0;
-  const remainingRequests = [...requests].sort((a, b) => a - b);
 
-  if (direction === "right") {
-    // Move right first
-    const rightRequests = remainingRequests
-      .filter((req) => req >= currentHead)
-      .sort((a, b) => a - b);
-    const leftRequests = remainingRequests
-      .filter((req) => req < currentHead)
-      .sort((a, b) => a - b);
+  const sortedRequests = [...requests].sort((a, b) => a - b);
+  const left = sortedRequests.filter(r => r < initialHead);
+  const right = sortedRequests.filter(r => r >= initialHead);
 
-    // Process requests to the right
-    for (const req of rightRequests) {
-      const distance = Math.abs(currentHead - req);
-      totalSeekDistance += distance;
-      currentHead = req;
-      seekSequence.push(currentHead);
-    }
+  let path: number[] = [];
 
-    // Jump to the first request on the left (circular)
-    if (leftRequests.length > 0) {
-      const jumpDistance = Math.abs(currentHead - leftRequests[0]);
-      totalSeekDistance += jumpDistance;
-      currentHead = leftRequests[0];
-      seekSequence.push(currentHead);
-    }
-
-    // Process remaining requests from the left (in order)
-    for (let i = 1; i < leftRequests.length; i++) {
-      const req = leftRequests[i];
-      const distance = Math.abs(currentHead - req);
-      totalSeekDistance += distance;
-      currentHead = req;
-      seekSequence.push(currentHead);
-    }
+  if (direction === 'right') {
+    // Move right to the end, jump to the beginning of requests, continue right
+    path = [...right, ...left];
   } else {
-    // Move left first
-    const leftRequests = remainingRequests
-      .filter((req) => req <= currentHead)
-      .sort((a, b) => b - a);
-    const rightRequests = remainingRequests
-      .filter((req) => req > currentHead)
-      .sort((a, b) => b - a);
-
-    // Process requests to the left
-    for (const req of leftRequests) {
-      const distance = Math.abs(currentHead - req);
-      totalSeekDistance += distance;
-      currentHead = req;
-      seekSequence.push(currentHead);
-    }
-
-    // Jump to the first request on the right (circular)
-    if (rightRequests.length > 0) {
-      const jumpDistance = Math.abs(currentHead - rightRequests[0]);
-      totalSeekDistance += jumpDistance;
-      currentHead = rightRequests[0];
-      seekSequence.push(currentHead);
-    }
-
-    // Process remaining requests from the right (in order)
-    for (let i = 1; i < rightRequests.length; i++) {
-      const req = rightRequests[i];
-      const distance = Math.abs(currentHead - req);
-      totalSeekDistance += distance;
-      currentHead = req;
-      seekSequence.push(currentHead);
-    }
+    // Move left to the beginning, jump to the end of requests, continue left
+    path = [...left.reverse(), ...right.reverse()];
   }
 
-  const distances = [];
-  for (let i = 1; i < seekSequence.length; i++) {
-    distances.push(Math.abs(seekSequence[i] - seekSequence[i - 1]));
+  for (const request of path) {
+    const seekTime = Math.abs(request - currentHead);
+    steps.push({
+      from: currentHead,
+      to: request,
+      seekTime,
+    });
+    totalSeekTime += seekTime;
+    currentHead = request;
+    sequence.push(request);
   }
-
-  const maxSeekDistance = distances.length > 0 ? Math.max(...distances) : 0;
-  const averageSeekDistance =
-    distances.length > 0 ? totalSeekDistance / distances.length : 0;
-
-  // Calculate variance
-  const squaredDifferences = distances.map((dist) =>
-    Math.pow(dist - averageSeekDistance, 2)
-  );
-  const variance =
-    squaredDifferences.length > 0
-      ? squaredDifferences.reduce((sum, val) => sum + val, 0) /
-        squaredDifferences.length
-      : 0;
 
   return {
-    algorithm: "C-LOOK",
-    totalSeekDistance,
-    averageSeekDistance,
-    maxSeekDistance,
-    variance,
-    seekSequence,
-    requestsProcessed: requests.length,
+    algorithm: 'C-LOOK',
+    sequence,
+    steps,
+    totalSeekTime,
+    averageSeekTime: requests.length > 0 ? totalSeekTime / requests.length : 0,
   };
 }

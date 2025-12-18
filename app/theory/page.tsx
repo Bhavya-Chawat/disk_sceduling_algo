@@ -2,7 +2,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
+import { Button } from "../../components/ui/button";
 import { ArrowLeft, BookOpen, Lightbulb, Zap, BarChart3 } from "lucide-react";
 import Link from "next/link";
 
@@ -211,7 +211,7 @@ export default function TheoryPage() {
             Performance Metrics
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {performanceMetrics.map((metric, index) => (
+            {performanceMetrics.map((metric) => (
               <div key={metric.name} className="glass-panel p-4 rounded-xl">
                 <h3 className="font-bold text-disk-primary-400 mb-2">
                   {metric.name}
