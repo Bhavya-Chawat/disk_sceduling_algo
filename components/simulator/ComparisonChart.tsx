@@ -1,9 +1,18 @@
-'use client';
+"use client";
 
-import { motion } from 'framer-motion';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { SimulationResult } from '../../lib/algorithms/types';
+import { motion } from "framer-motion";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { SimulationResult } from "../../lib/algorithms/types";
 
 interface ComparisonChartProps {
   results: SimulationResult[];
@@ -12,17 +21,17 @@ interface ComparisonChartProps {
 export default function ComparisonChart({ results }: ComparisonChartProps) {
   const chartData = results.map((result) => ({
     name: result.algorithm,
-    'Total Seek Time': result.totalSeekTime,
-    'Average Seek Time': parseFloat(result.averageSeekTime.toFixed(2)),
+    "Total Seek Time": result.totalSeekTime,
+    "Average Seek Time": parseFloat(result.averageSeekTime.toFixed(2)),
   }));
 
   const colors = [
-    { total: '#3b82f6', avg: '#60a5fa' },
-    { total: '#8b5cf6', avg: '#a78bfa' },
-    { total: '#ec4899', avg: '#f472b6' },
-    { total: '#f59e0b', avg: '#fbbf24' },
-    { total: '#10b981', avg: '#34d399' },
-    { total: '#06b6d4', avg: '#22d3ee' },
+    { total: "#3b82f6", avg: "#60a5fa" },
+    { total: "#8b5cf6", avg: "#a78bfa" },
+    { total: "#ec4899", avg: "#f472b6" },
+    { total: "#f59e0b", avg: "#fbbf24" },
+    { total: "#10b981", avg: "#34d399" },
+    { total: "#06b6d4", avg: "#22d3ee" },
   ];
 
   return (
@@ -40,18 +49,33 @@ export default function ComparisonChart({ results }: ComparisonChartProps) {
             <BarChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.1)" />
               <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                  backdropFilter: 'blur(10px)',
-                  border: '1px solid rgba(255, 255, 255, 0.3)',
-                  borderRadius: '8px',
+              <YAxis
+                label={{
+                  value: "Seek Time (tracks)",
+                  angle: -90,
+                  position: "insideLeft",
                 }}
               />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "rgba(255, 255, 255, 0.9)",
+                  backdropFilter: "blur(10px)",
+                  border: "1px solid rgba(255, 255, 255, 0.3)",
+                  borderRadius: "8px",
+                }}
+                formatter={(value) => `${value} tracks`}
+              />
               <Legend />
-              <Bar dataKey="Total Seek Time" fill="#3b82f6" radius={[8, 8, 0, 0]} />
-              <Bar dataKey="Average Seek Time" fill="#8b5cf6" radius={[8, 8, 0, 0]} />
+              <Bar
+                dataKey="Total Seek Time"
+                fill="#3b82f6"
+                radius={[8, 8, 0, 0]}
+              />
+              <Bar
+                dataKey="Average Seek Time"
+                fill="#8b5cf6"
+                radius={[8, 8, 0, 0]}
+              />
             </BarChart>
           </ResponsiveContainer>
 
@@ -73,7 +97,8 @@ export default function ComparisonChart({ results }: ComparisonChartProps) {
                   <div>
                     <div className="font-semibold">{result.algorithm}</div>
                     <div className="text-sm text-gray-600">
-                      Total: {result.totalSeekTime} tracks | Avg: {result.averageSeekTime.toFixed(2)} tracks
+                      Total: {result.totalSeekTime} tracks | Avg:{" "}
+                      {result.averageSeekTime.toFixed(2)} tracks
                     </div>
                   </div>
                 </div>

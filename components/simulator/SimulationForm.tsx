@@ -1,15 +1,25 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Play, Shuffle } from 'lucide-react';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
-import { Select } from '../ui/select';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card';
-import { Algorithm, Direction } from '../../lib/algorithms/types';
-import { parseRequestString, validateRequests, generateRandomRequests } from '../../lib/utils';
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { Play, Shuffle } from "lucide-react";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import { Select } from "../ui/select";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "../ui/card";
+import { Algorithm, Direction } from "../../lib/algorithms/types";
+import {
+  parseRequestString,
+  validateRequests,
+  generateRandomRequests,
+} from "../../lib/utils";
 
 interface SimulationFormProps {
   onSubmit: (data: {
@@ -22,16 +32,18 @@ interface SimulationFormProps {
 }
 
 export default function SimulationForm({ onSubmit }: SimulationFormProps) {
-  const [algorithm, setAlgorithm] = useState<Algorithm>('FCFS');
-  const [requestsInput, setRequestsInput] = useState('98, 183, 37, 122, 14, 124, 65, 67');
-  const [initialHead, setInitialHead] = useState('53');
-  const [totalTracks, setTotalTracks] = useState('200');
-  const [direction, setDirection] = useState<Direction>('right');
-  const [error, setError] = useState('');
+  const [algorithm, setAlgorithm] = useState<Algorithm>("FCFS");
+  const [requestsInput, setRequestsInput] = useState(
+    "98, 183, 37, 122, 14, 124, 65, 67"
+  );
+  const [initialHead, setInitialHead] = useState("53");
+  const [totalTracks, setTotalTracks] = useState("200");
+  const [direction, setDirection] = useState<Direction>("right");
+  const [error, setError] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
     const requests = parseRequestString(requestsInput);
     const head = parseInt(initialHead, 10);
@@ -44,7 +56,7 @@ export default function SimulationForm({ onSubmit }: SimulationFormProps) {
 
     const validation = validateRequests(requests, tracks);
     if (!validation.valid) {
-      setError(validation.error || 'Invalid requests');
+      setError(validation.error || "Invalid requests");
       return;
     }
 
@@ -60,7 +72,7 @@ export default function SimulationForm({ onSubmit }: SimulationFormProps) {
   const handleRandomize = () => {
     const tracks = parseInt(totalTracks, 10) || 200;
     const random = generateRandomRequests(8, tracks);
-    setRequestsInput(random.join(', '));
+    setRequestsInput(random.join(", "));
     setInitialHead(Math.floor(Math.random() * tracks).toString());
   };
 
@@ -109,7 +121,9 @@ export default function SimulationForm({ onSubmit }: SimulationFormProps) {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="initialHead">Initial Head Position</Label>
+                <Label htmlFor="initialHead">
+                  Initial Head Position (Track)
+                </Label>
                 <Input
                   id="initialHead"
                   type="number"
@@ -134,7 +148,7 @@ export default function SimulationForm({ onSubmit }: SimulationFormProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="requests">Request Queue</Label>
+              <Label htmlFor="requests">Request Queue (Track Numbers)</Label>
               <Input
                 id="requests"
                 value={requestsInput}
@@ -161,11 +175,7 @@ export default function SimulationForm({ onSubmit }: SimulationFormProps) {
                 <Play className="w-4 h-4 mr-2" />
                 Run Simulation
               </Button>
-              <Button
-                type="button"
-                onClick={handleRandomize}
-                className="glass"
-              >
+              <Button type="button" onClick={handleRandomize} className="glass">
                 <Shuffle className="w-4 h-4 mr-2" />
                 Randomize
               </Button>

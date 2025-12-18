@@ -1,28 +1,48 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { GitCompare, Play, Shuffle } from 'lucide-react';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Label } from '../../components/ui/label';
-import { Select } from '../../components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
-import ComparisonChart from '../../components/simulator/ComparisonChart';
-import { runAllAlgorithms } from '../../lib/simulationRunner';
-import { SimulationResult, Direction } from '../../lib/algorithms/types';
-import { parseRequestString, validateRequests, generateRandomRequests } from '../../lib/utils';
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { GitCompare, Play, Shuffle } from "lucide-react";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import { Select } from "../../components/ui/select";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "../../components/ui/card";
+import ComparisonChart from "../../components/simulator/ComparisonChart";
+import { runAllAlgorithms } from "../../lib/simulationRunner";
+import { SimulationResult, Direction } from "../../lib/algorithms/types";
+import {
+  parseRequestString,
+  validateRequests,
+  generateRandomRequests,
+} from "../../lib/utils";
 
 export default function ComparePage() {
-  const [requestsInput, setRequestsInput] = useState('98, 183, 37, 122, 14, 124, 65, 67');
-  const [initialHead, setInitialHead] = useState('53');
-  const [totalTracks, setTotalTracks] = useState('200');
-  const [direction, setDirection] = useState<Direction>('right');
+  const [requestsInput, setRequestsInput] = useState(
+    "98, 183, 37, 122, 14, 124, 65, 67"
+  );
+  const [initialHead, setInitialHead] = useState("53");
+  const [totalTracks, setTotalTracks] = useState("200");
+  const [direction, setDirection] = useState<Direction>("right");
   const [results, setResults] = useState<SimulationResult[]>([]);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
+  const [selectedAlgorithms, setSelectedAlgorithms] = useState<string[]>([
+    "FCFS",
+    "SSTF",
+    "SCAN",
+    "C-SCAN",
+    "LOOK",
+    "C-LOOK",
+  ]);
 
   const handleCompare = () => {
-    setError('');
+    setError("");
     const requests = parseRequestString(requestsInput);
     const head = parseInt(initialHead, 10);
     const tracks = parseInt(totalTracks, 10);
@@ -34,7 +54,12 @@ export default function ComparePage() {
 
     const validation = validateRequests(requests, tracks);
     if (!validation.valid) {
-      setError(validation.error || 'Invalid requests');
+      setError(validation.error || "Invalid requests");
+      return;
+    }
+
+    if (selectedAlgorithms.length === 0) {
+      setError("Please select at least one algorithm to compare");
       return;
     }
 
@@ -45,15 +70,27 @@ export default function ComparePage() {
       direction,
     });
 
-    setResults(allResults);
+    const filteredResults = allResults.filter((result) =>
+      selectedAlgorithms.includes(result.algorithm)
+    );
+
+    setResults(filteredResults);
   };
 
   const handleRandomize = () => {
     const tracks = parseInt(totalTracks, 10) || 200;
     const random = generateRandomRequests(8, tracks);
-    setRequestsInput(random.join(', '));
+    setRequestsInput(random.join(", "));
     setInitialHead(Math.floor(Math.random() * tracks).toString());
   };
+
+  const toggleAlgorithm = (algo: string) => {
+    setSelectedAlgorithms((prev) =>
+      prev.includes(algo) ? prev.filter((a) => a !== algo) : [...prev, algo]
+    );
+  };
+
+  const allAlgorithms = ["FCFS", "SSTF", "SCAN", "C-SCAN", "LOOK", "C-LOOK"];
 
   const getBestAlgorithm = () => {
     if (results.length === 0) return null;
@@ -98,7 +135,9 @@ export default function ComparePage() {
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="initialHead">Initial Head Position</Label>
+                  <Label htmlFor="initialHead">
+                    Initial Head Position (Track)
+                  </Label>
                   <Input
                     id="initialHead"
                     type="number"
@@ -136,13 +175,58 @@ export default function ComparePage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="requests">Request Queue</Label>
+                <Label htmlFor="requests">Request Queue (Track Numbers)</Label>
                 <Input
                   id="requests"
                   value={requestsInput}
                   onChange={(e) => setRequestsInput(e.target.value)}
                   placeholder="98, 183, 37, 122, 14, 124, 65, 67"
                 />
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label>Select Algorithms to Compare</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      if (selectedAlgorithms.length === allAlgorithms.length) {
+                        setSelectedAlgorithms([]);
+                      } else {
+                        setSelectedAlgorithms([...allAlgorithms]);
+                      }
+                    }}
+                    className="text-xs glass"
+                  >
+                    {selectedAlgorithms.length === allAlgorithms.length
+                      ? "Deselect All"
+                      : "Select All"}
+                  </Button>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {allAlgorithms.map((algo) => {
+                    const isSelected = selectedAlgorithms.includes(algo);
+                    return (
+                      <motion.div
+                        key={algo}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => toggleAlgorithm(algo)}
+                        className={`p-4 rounded-xl cursor-pointer transition-all border-2 ${
+                          isSelected
+                            ? "bg-gradient-to-r from-blue-200 to-purple-200 text-blue-900 border-blue-300 shadow-md"
+                            : "glass border-gray-300 hover:border-gray-400 hover:bg-gray-50"
+                        }`}
+                      >
+                        <div className="font-semibold text-center text-sm">
+                          {algo}
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
               </div>
 
               {error && (
@@ -161,7 +245,7 @@ export default function ComparePage() {
                   className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
                 >
                   <Play className="w-4 h-4 mr-2" />
-                  Compare All Algorithms
+                  Compare Algorithms
                 </Button>
                 <Button
                   type="button"
@@ -197,7 +281,8 @@ export default function ComparePage() {
                     {bestAlgorithm.algorithm}
                   </div>
                   <div className="text-sm text-gray-600">
-                    Total Seek Time: {bestAlgorithm.totalSeekTime} | Average: {bestAlgorithm.averageSeekTime.toFixed(2)}
+                    Total Seek Time: {bestAlgorithm.totalSeekTime} tracks |
+                    Average: {bestAlgorithm.averageSeekTime.toFixed(2)} tracks
                   </div>
                 </div>
               </div>
@@ -232,15 +317,21 @@ export default function ComparePage() {
                         <div className="flex gap-4">
                           <div className="text-center">
                             <div className="text-2xl font-bold text-orange-500">
-                              {result.totalSeekTime}
+                              {result.totalSeekTime}{" "}
+                              <span className="text-sm">tracks</span>
                             </div>
-                            <div className="text-xs text-gray-600">Total Seek</div>
+                            <div className="text-xs text-gray-600">
+                              Total Seek
+                            </div>
                           </div>
                           <div className="text-center">
                             <div className="text-2xl font-bold text-green-500">
-                              {result.averageSeekTime.toFixed(2)}
+                              {result.averageSeekTime.toFixed(2)}{" "}
+                              <span className="text-sm">tracks</span>
                             </div>
-                            <div className="text-xs text-gray-600">Avg Seek</div>
+                            <div className="text-xs text-gray-600">
+                              Avg Seek
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -272,7 +363,7 @@ export default function ComparePage() {
           <div className="glass-card rounded-2xl p-12 inline-block">
             <motion.div
               animate={{ rotate: 360 }}
-              transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
               className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-r from-blue-400 to-purple-400 opacity-20"
             />
             <p className="text-gray-500 text-lg">
