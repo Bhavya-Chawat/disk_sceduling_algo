@@ -11,29 +11,32 @@ interface DiskSceneProps {
   isPlaying: boolean;
 }
 
-// Particle trail following head
-function ParticleTrail({ position, totalTracks }: { position: number; totalTracks: number }) {
+// Enhanced particle trail following head
+function ParticleTrail({ position, totalTracks }: { 
+  position: number; 
+  totalTracks: number; 
+}) {
   const particlesRef = useRef<THREE.Points>(null);
-  const particleCount = 40;
+  const particleCount = 50;
   const positions = useMemo(() => new Float32Array(particleCount * 3), []);
-  const sizes = useMemo(() => new Float32Array(particleCount).fill(0.04), []);
+  const sizes = useMemo(() => new Float32Array(particleCount).fill(0.06), []);
   
   const radius = 0.3 + (position / totalTracks) * 2.2;
 
   useFrame(() => {
     if (!particlesRef.current) return;
     
-    // Shift particles
+    // Shift particles for trail effect
     for (let i = particleCount - 1; i > 0; i--) {
       positions[i * 3] = positions[(i - 1) * 3];
       positions[i * 3 + 1] = positions[(i - 1) * 3 + 1];
       positions[i * 3 + 2] = positions[(i - 1) * 3 + 2];
     }
     
-    // New particle at head
+    // New particle at head with enhanced glow
     positions[0] = radius;
     positions[1] = 0.02;
-    positions[2] = (Math.random() - 0.5) * 0.05;
+    positions[2] = (Math.random() - 0.5) * 0.08;
     
     particlesRef.current.geometry.attributes.position.needsUpdate = true;
   });
@@ -56,9 +59,9 @@ function ParticleTrail({ position, totalTracks }: { position: number; totalTrack
       </bufferGeometry>
       <pointsMaterial
         color="#FF6B35"
-        size={0.04}
+        size={0.06}
         transparent
-        opacity={0.8}
+        opacity={0.9}
         sizeAttenuation
         blending={THREE.AdditiveBlending}
       />
@@ -92,11 +95,7 @@ function CDPlatter({ totalTracks }: { totalTracks: number }) {
     return ringArray;
   }, [totalTracks]);
 
-  useFrame((state) => {
-    if (groupRef.current) {
-      groupRef.current.rotation.z = state.clock.elapsedTime * 0.05;
-    }
-  });
+  // Disk is stationary - no rotation
 
   return (
     <group ref={groupRef}>
@@ -166,38 +165,69 @@ function DiskHead({
   totalTracks: number;
 }) {
   const headRef = useRef<THREE.Group>(null);
-  const targetRadius = 0.3 + (position / totalTracks) * 2.2;
   const glowRef = useRef<THREE.PointLight>(null);
+  
+  // Calculate target radius based on track position
+  const targetRadius = useMemo(() => 0.3 + (position / totalTracks) * 2.2, [position, totalTracks]);
 
   useFrame((state, delta) => {
     if (headRef.current) {
+      // Smooth movement to target position
       const currentX = headRef.current.position.x;
-      headRef.current.position.x = THREE.MathUtils.lerp(currentX, targetRadius, delta * 5);
+      const currentZ = headRef.current.position.z;
+      const targetX = targetRadius;
+      const targetZ = 0;
+      
+      headRef.current.position.x = THREE.MathUtils.lerp(currentX, targetX, delta * 8);
+      headRef.current.position.z = THREE.MathUtils.lerp(currentZ, targetZ, delta * 8);
     }
     if (glowRef.current) {
-      glowRef.current.intensity = 0.8 + Math.sin(state.clock.elapsedTime * 6) * 0.3;
+      // Pulsing glow effect
+      glowRef.current.intensity = 1.0 + Math.sin(state.clock.elapsedTime * 8) * 0.4;
     }
   });
 
   return (
-    <group ref={headRef} position={[targetRadius, 0.03, 0]}>
-      {/* Read/write head - small glowing dot */}
-      <mesh>
-        <sphereGeometry args={[0.05, 16, 16]} />
+    <group ref={headRef}>
+      {/* Enhanced read/write head with better visual */}
+      <mesh position={[0, 0.05, 0]}>
+        <coneGeometry args={[0.08, 0.15, 8]} />
         <meshStandardMaterial 
           color="#F97316" 
           emissive="#F97316" 
-          emissiveIntensity={0.8} 
+          emissiveIntensity={1.0}
+          metalness={0.8}
+          roughness={0.2}
         />
       </mesh>
       
-      {/* Head glow */}
+      {/* Head base */}
+      <mesh position={[0, 0.02, 0]}>
+        <cylinderGeometry args={[0.06, 0.08, 0.04, 16]} />
+        <meshStandardMaterial 
+          color="#EA580C" 
+          metalness={0.9}
+          roughness={0.1}
+        />
+      </mesh>
+      
+      {/* Enhanced head glow */}
       <pointLight 
         ref={glowRef}
         color="#F97316" 
-        intensity={0.8} 
-        distance={0.5} 
+        intensity={1.0} 
+        distance={0.8} 
       />
+      
+      {/* Additional glow sphere */}
+      <mesh position={[0, 0.08, 0]}>
+        <sphereGeometry args={[0.03, 16, 16]} />
+        <meshBasicMaterial 
+          color="#FBBF24" 
+          transparent 
+          opacity={0.6}
+        />
+      </mesh>
     </group>
   );
 }
@@ -215,33 +245,47 @@ function TrackMarkers({
     <group>
       {requests.map((track, index) => {
         const radius = 0.3 + (track / totalTracks) * 2.2;
-        const angle = (index / requests.length) * Math.PI * 2;
+        // Position requests along the same path as the glowing trail
+        const angle = (index / Math.max(1, requests.length - 1)) * Math.PI * 0.4 - Math.PI / 4;
         const x = Math.cos(angle) * radius;
         const z = Math.sin(angle) * radius;
         const isVisited = visitedTracks.has(track);
         
         return (
           <group key={index} position={[x, 0.03, z]}>
-            {/* Marker */}
+            {/* Enhanced marker with glow */}
             <mesh>
-              <sphereGeometry args={[0.04, 16, 16]} />
+              <sphereGeometry args={[0.06, 16, 16]} />
               <meshStandardMaterial
                 color={isVisited ? "#10B981" : "#06B6D4"}
                 emissive={isVisited ? "#10B981" : "#06B6D4"}
-                emissiveIntensity={0.6}
+                emissiveIntensity={0.9}
               />
             </mesh>
             
-            {/* Track label */}
+            {/* Track label - bigger and more visible */}
             <Text
-              position={[0, 0.1, 0]}
-              fontSize={0.06}
+              position={[0, 0.18, 0]}
+              fontSize={0.14}
               color={isVisited ? "#10B981" : "#06B6D4"}
               anchorX="center"
               anchorY="middle"
+              fontWeight="bold"
             >
               {track}
             </Text>
+            
+            {/* Additional glow effect for visited tracks */}
+            {isVisited && (
+              <mesh position={[0, 0.02, 0]}>
+                <ringGeometry args={[0.08, 0.12, 16]} />
+                <meshBasicMaterial 
+                  color="#10B981" 
+                  transparent 
+                  opacity={0.4}
+                />
+              </mesh>
+            )}
           </group>
         );
       })}
@@ -259,12 +303,16 @@ function GlowingSeekPath({
   currentStep: number;
 }) {
   const lineObject = useMemo(() => {
+    if (!sequence || sequence.length < 2) return null;
+    
     const pts: THREE.Vector3[] = [];
-    const visibleSequence = sequence.slice(0, currentStep + 2);
+    // Show the complete sequence all at once
+    const visibleSequence = sequence;
     
     visibleSequence.forEach((track, index) => {
       const radius = 0.3 + (track / totalTracks) * 2.2;
-      const angle = (index / sequence.length) * Math.PI * 0.6 - Math.PI / 3;
+      // Position points in a line from inner to outer following the sequence order
+      const angle = (index / Math.max(1, visibleSequence.length - 1)) * Math.PI * 0.4 - Math.PI / 4;
       pts.push(new THREE.Vector3(
         Math.cos(angle) * radius,
         0.02,
@@ -276,13 +324,13 @@ function GlowingSeekPath({
 
     const geometry = new THREE.BufferGeometry().setFromPoints(pts);
     
-    // Gradient colors
+    // Enhanced glowing colors for complete trail
     const colors: number[] = [];
     visibleSequence.forEach((_, index) => {
       const t = index / Math.max(1, visibleSequence.length - 1);
       const color = new THREE.Color().lerpColors(
-        new THREE.Color('#06B6D4'),
-        new THREE.Color('#10B981'),
+        new THREE.Color('#FF6B35'),
+        new THREE.Color('#FBBF24'),
         t
       );
       colors.push(color.r, color.g, color.b);
@@ -292,11 +340,12 @@ function GlowingSeekPath({
     const material = new THREE.LineBasicMaterial({
       vertexColors: true,
       transparent: true,
-      opacity: 0.8,
+      opacity: 0.9,
+      linewidth: 3,
     });
 
     return new THREE.Line(geometry, material);
-  }, [sequence, totalTracks, currentStep]);
+  }, [sequence, totalTracks]); // Removed currentStep dependency
 
   if (!lineObject) return null;
 
@@ -305,42 +354,37 @@ function GlowingSeekPath({
 
 function Scene({ result, currentStep, totalTracks, isPlaying }: DiskSceneProps) {
   const headPosition = useMemo(() => {
-    if (!result || currentStep < 0) return result?.sequence[0] ?? 50;
+    if (!result || currentStep < 0) return result?.sequence?.[0] ?? 50;
     if (currentStep >= result.steps.length) return result.sequence[result.sequence.length - 1];
-    return result.steps[currentStep].to;
+    return result.steps[currentStep]?.to ?? result.sequence[0] ?? 50;
   }, [result, currentStep]);
 
   const visitedTracks = useMemo(() => {
+    if (!result) return new Set<number>();
     const visited = new Set<number>();
-    if (result) {
-      for (let i = 0; i <= currentStep && i < result.steps.length; i++) {
-        visited.add(result.steps[i].to);
-      }
+    for (let i = 0; i <= Math.min(currentStep, result.steps.length - 1); i++) {
+      visited.add(result.steps[i].to);
     }
     return visited;
   }, [result, currentStep]);
 
-  const requests = useMemo(() => {
-    if (!result) return [];
-    return result.sequence.slice(1);
-  }, [result]);
+  const requests = result?.sequence ?? [];
 
   return (
-    <>
-      {/* Top-down lighting */}
-      <ambientLight intensity={0.5} />
-      <directionalLight position={[0, 10, 0]} intensity={1} color="#FFFFFF" />
-      <pointLight position={[2, 3, 2]} intensity={0.4} color="#60A5FA" />
-      <pointLight position={[-2, 3, -2]} intensity={0.3} color="#06B6D4" />
+    <group>
+      {/* Ambient lighting */}
+      <ambientLight intensity={0.4} />
+      <directionalLight position={[5, 5, 5]} intensity={0.6} />
       
       {/* CD Disk */}
       <CDPlatter totalTracks={totalTracks} />
       
-      {/* Disk Head */}
-      <DiskHead position={headPosition} totalTracks={totalTracks} />
-      
-      {/* Particle Trail */}
-      <ParticleTrail position={headPosition} totalTracks={totalTracks} />
+      {/* Glowing Seek Path - Show complete trail */}
+      <GlowingSeekPath 
+        sequence={requests} 
+        totalTracks={totalTracks} 
+        currentStep={currentStep}
+      />
       
       {/* Track Markers */}
       <TrackMarkers 
@@ -349,27 +393,15 @@ function Scene({ result, currentStep, totalTracks, isPlaying }: DiskSceneProps) 
         visitedTracks={visitedTracks}
       />
       
-      {/* Seek Path */}
-      {result && (
-        <GlowingSeekPath 
-          sequence={result.sequence} 
-          totalTracks={totalTracks}
-          currentStep={currentStep}
-        />
-      )}
+      {/* Disk Head - Properly positioned */}
+      <DiskHead position={headPosition} totalTracks={totalTracks} />
       
-      {/* Top-down camera controls */}
-      <OrbitControls
-        enablePan={false}
-        minDistance={2.5}
-        maxDistance={6}
-        minPolarAngle={0}
-        maxPolarAngle={Math.PI / 4}
-        autoRotate={isPlaying}
-        autoRotateSpeed={0.5}
-        target={[0, 0, 0]}
+      {/* Particle Trail */}
+      <ParticleTrail 
+        position={headPosition} 
+        totalTracks={totalTracks} 
       />
-    </>
+    </group>
   );
 }
 
@@ -377,9 +409,20 @@ export function DiskScene(props: DiskSceneProps) {
   return (
     <div className="w-full h-full min-h-[400px] rounded-xl overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       <Canvas
-        camera={{ position: [0, 4, 0.5], fov: 50 }}
+        camera={{ position: [0, 3, 0.3], fov: 35 }}
         gl={{ antialias: true, alpha: true }}
       >
+        <OrbitControls 
+          enablePan={false}
+          enableZoom={true}
+          enableRotate={true}
+          minDistance={2}
+          maxDistance={8}
+          minPolarAngle={Math.PI / 6}
+          maxPolarAngle={Math.PI / 3}
+          autoRotate={false}
+          target={[0, 0, 0]}
+        />
         <Scene {...props} />
       </Canvas>
     </div>

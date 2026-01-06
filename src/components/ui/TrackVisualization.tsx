@@ -28,12 +28,12 @@ const STEP_COLORS = [
 
 export function TrackVisualization({ result, totalTracks, currentStep, algorithmId }: TrackVisualizationProps) {
   const chartData = useMemo(() => {
-    if (!result || result.steps.length === 0) return null;
+    if (!result || !result.steps || result.steps.length === 0) return null;
 
     // Get all tracks in sequence for x-axis positioning
-    const allTracks = [...new Set(result.sequence)].sort((a, b) => a - b);
+    const allTracks = [...new Set(result.sequence || [])].sort((a, b) => a - b);
     
-    // Calculate step data
+    // Calculate step data with proper error handling
     const steps = result.steps.map((step, index) => ({
       ...step,
       stepNumber: index + 1,
@@ -43,7 +43,7 @@ export function TrackVisualization({ result, totalTracks, currentStep, algorithm
     return { uniqueTracks: allTracks, steps };
   }, [result]);
 
-  if (!chartData || !result) {
+  if (!chartData || !result || !result.sequence) {
     return (
       <div className="glass p-6 rounded-xl">
         <p className="text-muted-foreground text-center">Run simulation to see track visualization</p>
@@ -52,19 +52,20 @@ export function TrackVisualization({ result, totalTracks, currentStep, algorithm
   }
 
   const chartWidth = 1000;
-  const chartHeight = Math.max(350, (result.steps.length + 2) * 40);
+  const chartHeight = Math.max(350, (chartData.steps.length + 2) * 40);
   const padding = { left: 50, right: 50, top: 50, bottom: 30 };
   const plotWidth = chartWidth - padding.left - padding.right;
   const plotHeight = chartHeight - padding.top - padding.bottom;
 
-  // X position for a track number
+  // X position for a track number with bounds checking
   const getX = (track: number) => {
-    return padding.left + (track / (totalTracks - 1)) * plotWidth;
+    const boundedTrack = Math.max(0, Math.min(track, totalTracks - 1));
+    return padding.left + (boundedTrack / Math.max(1, totalTracks - 1)) * plotWidth;
   };
 
   // Y position for a step (0 = start at top)
   const getY = (stepIndex: number) => {
-    const totalSteps = result.steps.length + 1;
+    const totalSteps = chartData.steps.length + 1;
     return padding.top + ((stepIndex + 1) / (totalSteps + 0.5)) * plotHeight;
   };
 
@@ -139,42 +140,46 @@ export function TrackVisualization({ result, totalTracks, currentStep, algorithm
           ))}
 
           {/* Starting point */}
-          <g filter="url(#glow)">
-            <circle
-              cx={getX(result.sequence[0])}
-              cy={getY(-1)}
-              r="20"
-              fill="#F97316"
-            />
-            <circle
-              cx={getX(result.sequence[0])}
-              cy={getY(-1)}
-              r="20"
-              fill="none"
-              stroke="white"
-              strokeWidth="2"
-            />
+          {result.sequence && result.sequence.length > 0 && (
+            <g filter="url(#glow)">
+              <circle
+                cx={getX(result.sequence[0])}
+                cy={getY(-1)}
+                r="20"
+                fill="#F97316"
+              />
+              <circle
+                cx={getX(result.sequence[0])}
+                cy={getY(-1)}
+                r="20"
+                fill="none"
+                stroke="white"
+                strokeWidth="2"
+              />
+              <text
+                x={getX(result.sequence[0])}
+                y={getY(-1) + 5}
+                textAnchor="middle"
+                fill="white"
+                fontSize="14"
+                fontWeight="bold"
+              >
+                0
+              </text>
+            </g>
+          )}
+          {result.sequence && result.sequence.length > 0 && (
             <text
               x={getX(result.sequence[0])}
-              y={getY(-1) + 5}
+              y={getY(-1) + 35}
               textAnchor="middle"
-              fill="white"
-              fontSize="14"
+              fill="hsl(var(--accent))"
+              fontSize="12"
               fontWeight="bold"
             >
-              0
+              Start
             </text>
-          </g>
-          <text
-            x={getX(result.sequence[0])}
-            y={getY(-1) + 35}
-            textAnchor="middle"
-            fill="hsl(var(--accent))"
-            fontSize="12"
-            fontWeight="bold"
-          >
-            Start
-          </text>
+          )}
 
           {/* Arrows for each step */}
           {visibleSteps.map((step, index) => {

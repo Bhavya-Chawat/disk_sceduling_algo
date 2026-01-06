@@ -4,13 +4,11 @@ import { Float } from '@react-three/drei';
 import * as THREE from 'three';
 
 function MiniDisk() {
-  const diskRef = useRef<THREE.Mesh>(null);
+  const diskRef = useRef<THREE.Group>(null);
   const headRef = useRef<THREE.Group>(null);
 
   useFrame((state) => {
-    if (diskRef.current) {
-      diskRef.current.rotation.y = state.clock.elapsedTime * 0.3;
-    }
+    // CD is stationary - no rotation
     if (headRef.current) {
       // Oscillate head position
       const radius = 1.5 + Math.sin(state.clock.elapsedTime * 2) * 0.8;
@@ -24,9 +22,9 @@ function MiniDisk() {
     for (let i = 0; i < 8; i++) {
       const radius = 0.5 + i * 0.35;
       ringArray.push(
-        <mesh key={i} rotation-x={-Math.PI / 2} position-y={0.11}>
+        <mesh key={i} rotation-x={-Math.PI / 2} position-y={0.002}>
           <ringGeometry args={[radius - 0.01, radius + 0.01, 32]} />
-          <meshBasicMaterial color="#3A5A84" transparent opacity={0.4} />
+          <meshBasicMaterial color="#60A5FA" transparent opacity={0.15} />
         </mesh>
       );
     }
@@ -35,25 +33,61 @@ function MiniDisk() {
 
   return (
     <Float speed={2} rotationIntensity={0.2} floatIntensity={0.5}>
-      <group>
-        {/* Main disk */}
-        <mesh ref={diskRef} rotation-x={-Math.PI / 2}>
-          <cylinderGeometry args={[3, 3, 0.2, 64]} />
+      <group ref={diskRef}>
+        {/* Main CD surface - flat disk */}
+        <mesh rotation-x={-Math.PI / 2}>
+          <circleGeometry args={[3, 64]} />
           <meshStandardMaterial
-            color="#1A2F42"
+            color="#1E293B"
             metalness={0.9}
+            roughness={0.15}
+          />
+        </mesh>
+
+        {/* Iridescent data layer */}
+        <mesh rotation-x={-Math.PI / 2} position-y={0.001}>
+          <ringGeometry args={[0.6, 2.8, 64]} />
+          <meshStandardMaterial
+            color="#3B82F6"
+            metalness={0.95}
             roughness={0.1}
+            transparent
+            opacity={0.3}
+          />
+        </mesh>
+
+        {/* Center label area */}
+        <mesh rotation-x={-Math.PI / 2} position-y={0.003}>
+          <ringGeometry args={[0.3, 0.6, 32]} />
+          <meshStandardMaterial 
+            color="#F1F5F9" 
+            metalness={0.2} 
+            roughness={0.5}
+          />
+        </mesh>
+        
+        {/* Center hole */}
+        <mesh rotation-x={-Math.PI / 2} position-y={0.003}>
+          <circleGeometry args={[0.3, 32]} />
+          <meshStandardMaterial 
+            color="#0F172A" 
+            metalness={0.8} 
+            roughness={0.2}
+          />
+        </mesh>
+
+        {/* Outer glow ring */}
+        <mesh rotation-x={-Math.PI / 2} position-y={0.001}>
+          <ringGeometry args={[2.8, 3, 64]} />
+          <meshBasicMaterial 
+            color="#06B6D4" 
+            transparent 
+            opacity={0.4}
           />
         </mesh>
         
         {/* Track rings */}
         {rings}
-        
-        {/* Center */}
-        <mesh rotation-x={-Math.PI / 2} position-y={0.12}>
-          <cylinderGeometry args={[0.4, 0.4, 0.25, 32]} />
-          <meshStandardMaterial color="#0A1929" metalness={0.95} roughness={0.05} />
-        </mesh>
         
         {/* Head arm */}
         <group ref={headRef} position={[1.5, 0.2, 0]}>
