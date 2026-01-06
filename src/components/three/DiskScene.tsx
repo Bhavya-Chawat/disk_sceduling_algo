@@ -248,7 +248,7 @@ function TrackMarkers({
         Math.min(currentStep + 1, requests.length - 1)
       );
       const currentMarkerAngle =
-        (stepIndex / Math.max(1, requests.length - 1)) * Math.PI * 0.4;
+        (stepIndex / Math.max(1, requests.length - 1)) * Math.PI * 0.6;
 
       // Rotate the group so current marker aligns with head
       const targetRotation = currentMarkerAngle;
@@ -265,7 +265,7 @@ function TrackMarkers({
   const getMarkerPosition = (index: number) => {
     const track = requests[index];
     const radius = 0.3 + (track / totalTracks) * 2.2;
-    const angle = (index / Math.max(1, requests.length - 1)) * Math.PI * 0.4;
+    const angle = (index / Math.max(1, requests.length - 1)) * Math.PI * 0.6;
     return { x: Math.cos(angle) * radius, z: Math.sin(angle) * radius };
   };
 
@@ -308,9 +308,9 @@ function TrackMarkers({
 
       {requests.map((track, index) => {
         const radius = 0.3 + (track / totalTracks) * 2.2;
-        // Position markers in an arc starting from head position (angle 0)
+        // Position markers in a wider arc for better spacing
         const angle =
-          (index / Math.max(1, requests.length - 1)) * Math.PI * 0.4;
+          (index / Math.max(1, requests.length - 1)) * Math.PI * 0.6;
         const x = Math.cos(angle) * radius;
         const z = Math.sin(angle) * radius;
         const isVisited = visitedTracks.has(track);
@@ -319,23 +319,23 @@ function TrackMarkers({
           <group key={index} position={[x, 0.03, z]}>
             {/* Enhanced marker with glow */}
             <mesh>
-              <sphereGeometry args={[0.06, 16, 16]} />
+              <sphereGeometry args={[0.05, 16, 16]} />
               <meshStandardMaterial
                 color={isVisited ? "#10B981" : "#06B6D4"}
                 emissive={isVisited ? "#10B981" : "#06B6D4"}
-                emissiveIntensity={0.9}
+                emissiveIntensity={0.7}
               />
             </mesh>
 
-            {/* Track label - faces camera/user */}
+            {/* Track label - billboard style facing up */}
             <Text
-              position={[0, 0.18, 0]}
-              fontSize={0.14}
+              position={[0, 0.15, 0]}
+              fontSize={0.1}
               color={isVisited ? "#10B981" : "#06B6D4"}
               anchorX="center"
               anchorY="middle"
               fontWeight="bold"
-              rotation={[-Math.PI / 2, 0, -angle]}
+              rotation={[-Math.PI / 2, 0, 0]}
             >
               {track}
             </Text>
@@ -424,9 +424,9 @@ function Scene({
 
 export function DiskScene(props: DiskSceneProps) {
   return (
-    <div className="w-full h-full min-h-[400px] rounded-xl overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="w-full h-full min-h-[300px] rounded-xl overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 light:from-slate-100 light:via-slate-50 light:to-slate-100">
       <Canvas
-        camera={{ position: [0, 3, 0.3], fov: 35 }}
+        camera={{ position: [0, 3.5, 0.5], fov: 32 }}
         gl={{ antialias: true, alpha: true }}
       >
         <OrbitControls

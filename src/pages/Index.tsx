@@ -1,27 +1,37 @@
-import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
-import { InfiniteGrid } from '@/components/ui/InfiniteGrid';
-import { AlgorithmCard } from '@/components/ui/AlgorithmCard';
-import { HeroDiskPreview } from '@/components/three/HeroDiskPreview';
-import { ALGORITHMS } from '@/lib/algorithms/types';
-import { Button } from '@/components/ui/button';
-import { Play, BookOpen, BarChart3, Sparkles, Cpu, GraduationCap } from 'lucide-react';
+import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
+import { InfiniteGrid } from "@/components/ui/InfiniteGrid";
+import { AlgorithmCard } from "@/components/ui/AlgorithmCard";
+import { HeroDiskPreview } from "@/components/three/HeroDiskPreview";
+import { ALGORITHMS } from "@/lib/algorithms/types";
+import { Button } from "@/components/ui/button";
+import {
+  Play,
+  BookOpen,
+  BarChart3,
+  Sparkles,
+  Cpu,
+  GraduationCap,
+} from "lucide-react";
 
 const features = [
   {
     icon: Sparkles,
-    title: '3D Visualization',
-    description: 'Interactive Three.js disk animation with real-time head movement tracking',
+    title: "3D Visualization",
+    description:
+      "Interactive Three.js disk animation with real-time head movement tracking",
   },
   {
     icon: GraduationCap,
-    title: 'VTU-Style Theory',
-    description: 'Comprehensive theory sections with examples, formulas, and previous year questions',
+    title: "Comprehensive Theory",
+    description:
+      "In-depth theory sections with examples, formulas, and detailed explanations",
   },
   {
     icon: Cpu,
-    title: 'Algorithm Comparison',
-    description: 'Compare all 6 algorithms side-by-side with performance metrics',
+    title: "Algorithm Comparison",
+    description:
+      "Compare all 6 algorithms side-by-side with performance metrics",
   },
 ];
 
@@ -29,7 +39,7 @@ export default function Index() {
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
       <InfiniteGrid />
-      
+
       {/* Hero Section */}
       <section className="relative pt-24 pb-16 px-4">
         <div className="max-w-7xl mx-auto">
@@ -48,21 +58,26 @@ export default function Index() {
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6"
               >
                 <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                <span className="text-sm text-primary font-medium">Interactive Learning Tool</span>
+                <span className="text-sm text-primary font-medium">
+                  Interactive Learning Tool
+                </span>
               </motion.div>
-              
+
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
                 <span className="text-foreground">Disk Scheduling</span>
                 <br />
-                <span className="text-gradient-primary">Algorithm Visualizer</span>
+                <span className="text-gradient-primary">
+                  Algorithm Visualizer
+                </span>
               </h1>
-              
+
               <p className="text-lg text-muted-foreground mb-8 max-w-xl mx-auto lg:mx-0">
-                Master Operating System concepts with interactive 3D simulations. 
-                Explore FCFS, SSTF, SCAN, C-SCAN, LOOK, and C-LOOK algorithms 
-                through beautiful visualizations and VTU-style theory.
+                Master Operating System concepts with interactive 3D
+                simulations. Explore FCFS, SSTF, SCAN, C-SCAN, LOOK, and C-LOOK
+                algorithms through beautiful visualizations and comprehensive
+                theory.
               </p>
-              
+
               <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
                 <Link to="/simulator">
                   <Button size="lg" className="gap-2 glow-blue">
@@ -78,7 +93,7 @@ export default function Index() {
                 </Link>
               </div>
             </motion.div>
-            
+
             {/* Right - 3D Preview */}
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
@@ -109,7 +124,7 @@ export default function Index() {
               Everything you need to understand disk scheduling algorithms
             </p>
           </motion.div>
-          
+
           <div className="grid md:grid-cols-3 gap-6">
             {features.map((feature, index) => (
               <motion.div
@@ -148,13 +163,18 @@ export default function Index() {
               Explore Algorithms
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Click on any algorithm to learn the theory, see examples, and run simulations
+              Click on any algorithm to learn the theory, see examples, and run
+              simulations
             </p>
           </motion.div>
-          
+
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {ALGORITHMS.map((algorithm, index) => (
-              <AlgorithmCard key={algorithm.id} algorithm={algorithm} index={index} />
+              <AlgorithmCard
+                key={algorithm.id}
+                algorithm={algorithm}
+                index={index}
+              />
             ))}
           </div>
         </div>
@@ -175,7 +195,8 @@ export default function Index() {
                 Ready to Compare?
               </h2>
               <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
-                Run all algorithms on the same request queue and see which performs best
+                Run all algorithms on the same request queue and see which
+                performs best
               </p>
               <Link to="/compare">
                 <Button size="lg" className="gap-2">
@@ -192,7 +213,7 @@ export default function Index() {
       <footer className="relative py-8 px-4 border-t border-border/50">
         <div className="max-w-7xl mx-auto text-center">
           <p className="text-sm text-muted-foreground">
-            Built for Computer Science students • VTU Curriculum 2021 Scheme
+            Built for Computer Science students
           </p>
           <p className="text-xs text-muted-foreground/60 mt-2">
             Created by Kruthi Krishna & Bhavya Chawat
